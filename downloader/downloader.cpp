@@ -733,7 +733,7 @@ bool Downloader::DeleteClonedProjects = true;
 
 bool Downloader::Debug_ReuseClonedProjects = false;
 
-long Downloader::Debug_MaxProjects = 1000;
+long Downloader::Debug_MaxProjects = -1;
 
 long Downloader::Debug_FirstProjectOffset = 0;
 
@@ -809,7 +809,7 @@ int main(int argc, char * argv[]) {
     Settings::OutputPath = "/data/ele";
 	//Settings::OutputPath = "/home/peta/ele";
     Downloader::Initialize(PatternList::JavaScript());
-    Downloader::Spawn(8);
+    Downloader::Spawn(16);
     Downloader::Run();
     //Downloader::FeedProjectsFrom("/home/peta/devel/ele-pipeline/project_urls.csv");
     Downloader::FeedProjectsFrom("/data/ele/projects.csv");
