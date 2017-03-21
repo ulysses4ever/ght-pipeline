@@ -175,7 +175,7 @@ inline CSVParser::Iterator::Iterator(CSVParser const * parser, bool atEnd):
     }
 }
 
-bool CSVParser::Iterator::operator == (Iterator const & other) const {
+inline bool CSVParser::Iterator::operator == (Iterator const & other) const {
     if (p_ != other.p_)
         return false;
     if (lineCount_ != other.lineCount_)
@@ -183,7 +183,7 @@ bool CSVParser::Iterator::operator == (Iterator const & other) const {
     return true;
 }
 
-bool CSVParser::Iterator::operator != (Iterator const & other) const {
+inline bool CSVParser::Iterator::operator != (Iterator const & other) const {
     if (p_ != other.p_)
         return true;
     if (lineCount_ != other.lineCount_)

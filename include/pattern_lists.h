@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 
+// TODO move this to proper settings, or settings section even?
 
 /** Contants white and black lists for file names.
  */
@@ -24,16 +25,19 @@ public:
 
       First the denied exact names, prefixes, suffixes and contains are checked. If the filename does not violate these, then the allowed items are checked and if at least one matches, true is returned.
 
-      Sets denied to true if the file has been denied for any reason, false if not.
+      Sets denied to true if the file is blacklisted.
+
      */
-    bool check(std::string const & filename, bool & denied) {
-        denied =
+    bool check(std::string const & filename, bool & denied) const {
+        bool deny =
                 checkName(deny_, filename) or
                 checkSuffix(denySuffix_, filename) or
                 checkPrefix(denyPrefix_, filename) or
                 checkContains(denyContains_, filename);
-        if (denied)
+        if (deny) {
+            ++denied;
             return false;
+        }
         return
             checkName(allow_, filename) or
             checkSuffix(allowSuffix_, filename) or
@@ -75,11 +79,11 @@ public:
 
 private:
 
-    bool checkName(std::unordered_set<std::string> const & x, std::string const & what) {
+    bool checkName(std::unordered_set<std::string> const & x, std::string const & what) const {
         return x.find(what) != x.end();
     }
 
-    bool checkSuffix(std::unordered_set<std::string> const & x, std::string const & what) {
+    bool checkSuffix(std::unordered_set<std::string> const & x, std::string const & what) const {
         for (std::string const & xx : x) {
             int y = what.size() - xx.size();
             if (y >= 0)
@@ -89,14 +93,14 @@ private:
         return false;
     }
 
-    bool checkPrefix(std::unordered_set<std::string> const & x, std::string const & what) {
+    bool checkPrefix(std::unordered_set<std::string> const & x, std::string const & what) const {
         for (std::string const & xx : x)
             if (what.find(xx) == 0)
                 return true;
         return false;
     }
 
-    bool checkContains(std::unordered_set<std::string> const & x, std::string const & what) {
+    bool checkContains(std::unordered_set<std::string> const & x, std::string const & what) const {
         for (std::string const & xx : x) {
             auto i = what.find(xx);
             if (i < what.size() and i != std::string::npos)

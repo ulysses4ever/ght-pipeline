@@ -59,10 +59,8 @@ public:
     static std::string GetLatestCommit(std::string const & repoPath);
 
     /** Checkouts the given branch.
-
-      Returns true if successful, false otherwise.
      */
-    static bool SetBranch(std::string const & repoPath, std::string const branch);
+    static void SetBranch(std::string const & repoPath, std::string const branch);
 
     /** Returns the info for current branch.
      */
@@ -76,11 +74,31 @@ public:
      */
     static std::vector<FileHistory> GetFileHistory(std::string const & repoPath, FileInfo const & file);
 
-    /** For a given file history, stores the contents of the given file at that level into the specified string (into). If the file does not exist at that revision, does not change the string and returns false. 
+    /** For a given file history, stores the contents of the given file at that level into the specified string (into).
+
+     If the file does not exist at that revision, throws an exception.
      */
-    static bool GetFileRevision(std::string const & repoPath,  const FileHistory & file, std::string & into);
+    static std::string GetFileRevision(std::string const & repoPath,  std::string const & relPath, std::string const & commit);
 
 
+
+
+
+    struct Commit {
+    public:
+        std::string hash;
+        int time;
+        Commit(std::string const & hash, int time):
+            hash(hash),
+            time(time) {
+        }
+    };
+
+    static void Checkout(std::string const &repo_, std::string const & commit);
+
+    static std::vector<Commit> GetCommits(std::string const & repoPath);
+
+    static std::vector<std::string> GetChanges(std::string const & repoPath, std::string const & commit);
 
 
 

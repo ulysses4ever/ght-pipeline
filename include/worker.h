@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <queue>
 #include <atomic>
+#include <cmath>
 
 #include "utils.h"
 
@@ -18,6 +19,7 @@ void Write(std::string what);
 void Error(std::string what);
 
 void Log(std::string what);
+
 
 template<typename CRTP, typename TASK>
 class Worker {
@@ -48,18 +50,21 @@ public:
         if (running_)
             throw std::runtime_error("Unable to Spawn threads, already running");
         numThreads_ = numThreads;
+        threads_.resize(numThreads);
         for (unsigned i = 0; i < numThreads; ++i) {
             std::thread t([i] () {
                 // set thread id
                 setThreadId(i);
                 // create the worker
                 CRTP worker;
+                threads_[i] = &worker;
                 // start the worker
                 worker.start();
                 Log("Done.");
                 // wake up the blocked Stop() if last thread finishes
                 if (--numThreads_ == 0)
                     cvStatus_.notify_all();
+                threads_[i] = nullptr;
             });
             t.detach();
         }
@@ -72,6 +77,7 @@ public:
             return;
         // flip to running
         running_ = true;
+        start_ = std::chrono::high_resolution_clock::now();
         // notify all threads
         cvStatus_.notify_all();
     }
@@ -87,6 +93,7 @@ public:
         // wait until the last thread finishes
         while (numThreads_ > 0)
             cvStatus_.wait(g);
+        totalTime_ = TimeSinceStart();
     }
 
     /** Waits for all tasks to become blocked on an empty queue. Then stops them and returns when done.
@@ -104,6 +111,13 @@ public:
         // wait for the threads to exit
         while (numThreads_ > 0)
             cvStatus_.wait(g);
+        totalTime_ = TimeSinceStart();
+    }
+
+    /** Returns true when all threads have finished their execution. 
+     */
+    static bool AllDone() {
+        return numThreads_ == 0;
     }
 
     static unsigned long CompletedTasks() {
@@ -114,14 +128,55 @@ public:
         return errorTasks_;
     }
 
+    static double TotalTime() {
+        if (not std::isnan(totalTime_))
+            return totalTime_;
+        return TimeSinceStart();
+    }
+
 
 protected:
+    static std::vector<CRTP *> threads_;
 
 private:
+
+    class WorkerTerminatedException {
+    };
+
+    static double TimeSinceStart() {
+        auto now = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now - start_).count() / 1000.0;
+    }
 
     /** This method must be overriden in children to process the given task.
      */
     virtual void run(TASK & task) = 0;
+
+
+    TASK getNextTask() {
+        std::unique_lock<std::mutex> g(m_);
+        // if the job queue is empty, wait
+        while (tasks_.empty()) {
+            --runningThreads_;
+            // notify status change because the thread is going to sleep
+            cvStatus_.notify_one();
+            cvNotEmpty_.wait(g);
+            // when we wake up, check that we are still good to go
+            if (not running_)
+                throw WorkerTerminatedException();
+            if (not tasks_.empty()) {
+                // increase number of running threads and get the job
+                ++runningThreads_;
+                break;
+            }
+        }
+        TASK task = tasks_.front();
+        // if there is a room for new task, and there was none before, notify producers
+        if (tasks_.size() == BlockingTaskQueueSize)
+            cvFull_.notify_one();
+        tasks_.pop();
+        return task;
+    }
 
     void start() {
         Log("Started.");
@@ -137,39 +192,20 @@ private:
         Log("Running.");
         // while we are in running state, get task to process and run on it.
         while (running_ == true) {
-            TASK task;
-            {
-                std::unique_lock<std::mutex> g(m_);
-                // if the job queue is empty, wait
-                while (tasks_.empty()) {
-                    --runningThreads_;
-                    // notify status change because the thread is going to sleep
-                    cvStatus_.notify_one();
-                    cvNotEmpty_.wait(g);
-                    // when we wake up, check that we are still good to go
-                    if (not running_)
-                        return;
-                    if (not tasks_.empty()) {
-                        // increase number of running threads and get the job
-                        ++runningThreads_;
-                        break;
-                    }
-                }
-                task = tasks_.front();
-                // if there is a room for new task, and there was none before, notify producers
-                if (tasks_.size() == BlockingTaskQueueSize)
-                    cvFull_.notify_one();
-                tasks_.pop();
-            }
             try {
-                // we got the task, run it
-                run(task);
-                // this cannot throw so is safe
-                ++completedTasks_;
-            } catch (std::exception const & e) {
-                Error(STR(e.what() << " while executing task " << task));
-                ++completedTasks_;
-                ++errorTasks_;
+                TASK task = getNextTask();
+                try {
+                    // we got the task, run it
+                    run(task);
+                    // this cannot throw so is safe
+                    ++completedTasks_;
+                } catch (std::exception const & e) {
+                    Error(STR(e.what() << " while executing task " << task));
+                    ++completedTasks_;
+                    ++errorTasks_;
+                }
+            } catch (WorkerTerminatedException) {
+                return;
             }
         }
     }
@@ -215,8 +251,19 @@ private:
      */
     static std::atomic<uint64_t> errorTasks_;
 
+    /** Start of the execution.
+    */
+    static std::chrono::high_resolution_clock::time_point start_;
+
+    /** Duration of the task.
+    */
+    static double totalTime_;
 };
 
+
+
+template<typename CRTP, typename TASK>
+std::vector<CRTP *> Worker<CRTP, TASK>::threads_;
 
 template<typename CRTP, typename TASK>
 size_t Worker<CRTP, TASK>::BlockingTaskQueueSize = 1000;
@@ -251,6 +298,11 @@ std::atomic<uint64_t> Worker<CRTP, TASK>::completedTasks_(0);
 template<typename CRTP, typename TASK>
 std::atomic<uint64_t> Worker<CRTP, TASK>::errorTasks_(0);
 
+template<typename CRTP, typename TASK>
+std::chrono::high_resolution_clock::time_point Worker<CRTP, TASK>::start_;
+
+template<typename CRTP, typename TASK>
+double Worker<CRTP, TASK>::totalTime_(NAN);
 
 
 

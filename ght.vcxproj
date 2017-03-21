@@ -56,7 +56,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>Makefile</ConfigurationType>
-    <RemoteRootDir>~/devel</RemoteRootDir>
+    <RemoteRootDir>/home/peta/devel</RemoteRootDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -71,14 +71,35 @@
     <NMakeIncludeSearchPath>$(ProjectDir);$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
     <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
-    <RemoteBuildOutputs>$(RemoteProjectDir)/build/downloader</RemoteBuildOutputs>
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
     <OutDir>$(ProjectDir)/build</OutDir>
     <IntDir>$(ProjectDir)/build</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
+    <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
+    <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
+    <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
+    <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <RemoteBuildOutputs>$(RemoteProjectDir)/build/ght</RemoteBuildOutputs>
+    <RemoteBuildCommandLine>cd $(RemoteProjectDir) &amp;&amp; ./build.sh</RemoteBuildCommandLine>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="cleaner\cleaner.cpp" />
     <ClCompile Include="downloader\downloader.cpp" />
     <ClCompile Include="downloader\git.cpp" />
+    <ClCompile Include="ght\ght.cpp" />
     <ClCompile Include="hashes\md5.cpp" />
     <ClCompile Include="include\exec.cpp" />
     <ClCompile Include="include\filesystem.cpp" />
@@ -87,7 +108,9 @@
     <ClCompile Include="include\worker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cleaner\cleaner.h" />
     <ClInclude Include="downloader\git.h" />
+    <ClInclude Include="ght\settings.h" />
     <ClInclude Include="hashes\md5.h" />
     <ClInclude Include="include\csv.h" />
     <ClInclude Include="include\exec.h" />
@@ -95,6 +118,7 @@
     <ClInclude Include="include\hash.h" />
     <ClInclude Include="include\pattern_lists.h" />
     <ClInclude Include="include\settings.h" />
+    <ClInclude Include="include\timer.h" />
     <ClInclude Include="include\utils.h" />
     <ClInclude Include="include\worker.h" />
   </ItemGroup>

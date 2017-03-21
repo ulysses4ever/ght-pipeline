@@ -59,10 +59,11 @@ std::string Git::GetLatestCommit(std::string const & repoPath) {
         throw std::ios_base::failure(STR("Unable to get latest commit in " << repoPath));
 }
 
-bool Git::SetBranch(std::string const & repoPath, std::string const branch) {
+void Git::SetBranch(std::string const & repoPath, std::string const branch) {
     std::string cmd = STR("git checkout \"" << branch << "\"");
     std::string output; // silenc the console output of git
-    return execAndCapture(cmd, repoPath, output);
+    if (not execAndCapture(cmd, repoPath, output))
+        throw std::ios_base::failure(STR("Unable to checkout branch " << branch << " in " << repoPath));
 }
 
 Git::BranchInfo Git::GetBranchInfo(std::string const & repoPath) {
@@ -121,7 +122,62 @@ std::vector<Git::FileHistory> Git::GetFileHistory(std::string const & repoPath, 
     return result;
 }
 
-bool Git::GetFileRevision(std::string const & repoPath, const FileHistory & file, std::string & into) {
-    std::string cmd = STR("git show " << file.hash << ":" << "\"" << file.filename << "\"");
-    return execAndCapture(cmd, repoPath, into);
+std::string Git::GetFileRevision(std::string const & repoPath, std::string const & relPath, std::string const & commit) {
+    std::string cmd = STR("git show " << commit << ":" << "\"" << relPath << "\"");
+    std::string result;
+    if (not execAndCapture(cmd, repoPath, result))
+        throw std::ios_base::failure(STR("Unable to get file contents for file " << relPath << " commit " << commit << " at " << relPath << ", git says: " << result));
+    return result;
+
 }
+
+void Git::Checkout(std::string const &repoPath, std::string const & commit) {
+    std::string cmd = STR("git checkout " << commit);
+    std::string result;
+    if (not execAndCapture(cmd, repoPath, result))
+        throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
+}
+
+
+std::vector<Git::Commit> Git::GetCommits(std::string const & repoPath) {
+    std::string cmd = "git log --format=\"%H %at\"";
+    std::string result;
+    if (not execAndCapture(cmd, repoPath, result))
+        throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
+    std::vector<Commit> commits;
+    std::size_t i = 0;
+    while (i < result.size()) {
+        std::string hash = result.substr(i, 40);
+        i += 41; // for the space
+        int time = 0;
+        while (result[i] != '\n')
+            time = (time * 10) + (result[i++] - '0');
+        ++i; // new line
+        commits.push_back(Commit(hash, time));
+    }
+    return commits;
+}
+
+std::vector<std::string> Git::GetChanges(std::string const & repoPath, std::string const & commit) {
+    std::string cmd = STR("git show --oneline --name-only " << commit);
+    std::string result;
+    if (not execAndCapture(cmd, repoPath, result))
+        throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
+    std::vector<std::string> changes;
+    std::size_t i = 0;
+    while (i < result.size()) {
+        std::size_t start = i;
+        while (result[i] != '\n')
+            ++i;
+        ++i;
+        if (start == 0) // skip the first line
+            continue;
+        changes.push_back(result.substr(start, i-start-1));
+    }
+    return changes;
+}
+
+
+
+// git log branch can be done w/o doing a branch
+// git log all

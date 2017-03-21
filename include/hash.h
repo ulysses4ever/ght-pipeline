@@ -5,6 +5,12 @@
 #include <ostream>
 
 
+
+
+
+
+
+
 /** A compressed way of storing md5 hashes so that they take less memory and are easier to compare.
  */
 struct Hash {
