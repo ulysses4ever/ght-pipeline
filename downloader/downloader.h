@@ -521,7 +521,7 @@ private:
 
     static std::ofstream contentHashesFile_;
 
-    static std::unordered_map<Hash,long> contentHashes_;
+    static std::unordered_map<SHA1,long> contentHashes_;
 
     static std::mutex contentGuard_;
     static std::mutex failedProjectsGuard_;

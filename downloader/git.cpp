@@ -60,7 +60,7 @@ std::string Git::GetLatestCommit(std::string const & repoPath) {
 }
 
 void Git::SetBranch(std::string const & repoPath, std::string const branch) {
-    std::string cmd = STR("git checkout \"" << branch << "\"");
+    std::string cmd = STR("git checkout --force \"" << branch << "\"");
     std::string output; // silenc the console output of git
     if (not execAndCapture(cmd, repoPath, output))
         throw std::ios_base::failure(STR("Unable to checkout branch " << branch << " in " << repoPath));
@@ -132,7 +132,7 @@ std::string Git::GetFileRevision(std::string const & repoPath, std::string const
 }
 
 void Git::Checkout(std::string const &repoPath, std::string const & commit) {
-    std::string cmd = STR("git checkout " << commit);
+    std::string cmd = STR("git checkout --force " << commit);
     std::string result;
     if (not execAndCapture(cmd, repoPath, result))
         throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
@@ -176,6 +176,87 @@ std::vector<std::string> Git::GetChanges(std::string const & repoPath, std::stri
     }
     return changes;
 }
+
+std::vector<Git::Object> Git::GetObjects(std::string const & repoPath, std::string const & commit, std::string const & parent) {
+    std::vector<Object> objects;
+    std::string result;
+    // this is a hack - first commit has no parent therefore diff will not help
+    if (parent.empty()) {
+        std::string cmd = STR("git ls-tree -r " << commit);
+        if (not execAndCapture(cmd, repoPath, result))
+            throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
+        std::size_t i = 0;
+        while (i < result.size()) {
+            while (result[++i] != ' ') {} // permissions
+            std::size_t startt = i;
+            while (result[++i] != ' ') {} // type
+            std::string hash = result.substr(i, 40); // hash
+            std::size_t startp = i;
+            while (result[++i] != ' ') {} // relPath
+            std::string relPath = result.substr(startp, i - startp);
+            objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Added));
+        }
+    } else {
+        std::string cmd = STR("git diff-tree --no-renames " << parent << " " << commit);
+        if (not execAndCapture(cmd, repoPath, result))
+            throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
+        std::size_t i = 0;
+        while (i < result.size()) {
+            i += 56; // colon and permissions and first hash
+            std::string hash = result.substr(i, 40);
+            i += 41; // second hash
+            char c = result[i++];
+            while (result[i] != ' ') // ski anything right after type
+                ++i;
+            while (result[i] == ' ') // skip any spaces before filename
+                ++i;
+            std::size_t start = i;
+            while (result[i] != '\n')
+                ++i;
+            std::string relPath = result.substr(start, i - start);
+            ++i; // new line
+            switch (c) {
+            case 'A':
+                objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Added));
+                break;
+            case 'M':
+                objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Modified));
+                break;
+            case 'D':
+                objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Deleted));
+                break;
+            default:
+                objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Unknown));
+                break;
+            }
+        }
+    }
+    return objects;
+
+}
+
+
+/*
+
+  The new process:
+
+  1) only checkout a commit if it has a file we need to sample
+
+
+
+
+
+*/
+
+
+
+//:000000 100644 0000000000000000000000000000000000000000 884c00ffcc76686f94efe8f3568f28de510c6126 A      build.sh
+//:040000 040000 cc21f5537beb84b6a9e85e0a64475dd0925e68dc 99649e9be8509f0d24a65c2214142db4c6bdb298 M      downloader
+//:000000 100644 0000000000000000000000000000000000000000 a6d7299704d35cfb6de56f65e1428f6c733aaeaf A      ght.sln
+//:000000 100644 0000000000000000000000000000000000000000 598b2fe93c50b60f296a795818b7f37fa41e4a2a A      ght.vcxproj
+//:040000 040000 67acae127848e272017fbad63ecbbf803857b826 5e3ab8c83fca0ffd7e9499b5dd5a25c723538f33 M      include
+//:000000 100644 0000000000000000000000000000000000000000 4940b83b6acc123faa61625eb31b06299d9f348c A      rebuild.sh
+//:100644 000000 30bb0c3122cd70631ed946718a022a8342e1b14f 0000000000000000000000000000000000000000 D      settings.csv
 
 
 

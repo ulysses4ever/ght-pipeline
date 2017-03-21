@@ -147,7 +147,7 @@ std::ofstream Downloader::failedProjectsFile_;
 
 std::ofstream Downloader::contentHashesFile_;
 
-std::unordered_map<Hash,long> Downloader::contentHashes_;
+std::unordered_map<SHA1,long> Downloader::contentHashes_;
 
 std::mutex Downloader::contentGuard_;
 std::mutex Downloader::failedProjectsGuard_;
@@ -500,7 +500,8 @@ ProgressReporter::Feeder Downloader::GetReporterFeeder() {
 
 long Downloader::AssignContentsId(std::string const & contents) {
     bytes_ += contents.size();
-    Hash h = Hash::Calculate(contents);
+    SHA1 h;
+    //Hash h = Hash::Calculate(contents);
     long id;
     {
         std::lock_guard<std::mutex> g(contentGuard_);

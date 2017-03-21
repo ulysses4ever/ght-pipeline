@@ -94,11 +94,32 @@ public:
         }
     };
 
+    struct Object {
+    public:
+        enum class Type {
+            Added,
+            Modified,
+            Deleted,
+            Unknown
+        };
+        std::string hash;
+        std::string relPath;
+        Type type;
+
+        Object(std::string && hash, std::string && relPath, Type type):
+            hash(std::move(hash)),
+            relPath(std::move(relPath)),
+            type(type) {
+        }
+    };
+
     static void Checkout(std::string const &repo_, std::string const & commit);
 
     static std::vector<Commit> GetCommits(std::string const & repoPath);
 
     static std::vector<std::string> GetChanges(std::string const & repoPath, std::string const & commit);
+
+    static std::vector<Object> GetObjects(std::string const & repoPath, std::string const & commit, std::string const & parent);
 
 
 

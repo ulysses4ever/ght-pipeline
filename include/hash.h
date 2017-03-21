@@ -6,64 +6,65 @@
 
 
 
-
-
-
-
-
-/** A compressed way of storing md5 hashes so that they take less memory and are easier to compare.
- */
+template<unsigned BYTES>
 struct Hash {
-    uint64_t first;
-    uint64_t second;
 
-    Hash():
-        first(0),
-        second(0) {
+    static_assert(BYTES % 4 == 0, "Invalid hash size");
+
+    Hash() = default;
+
+    Hash(std::string const & hex) {
     }
 
-    /** Creates hash from its hexadecimal representation (reverse to the << operator).
-     */
-    static Hash FromString(std::string const & from);
-
-    /** Calculates hash of given string.
-     */
-    static Hash Calculate(std::string const & from);
-
-    Hash & operator = (Hash const & other) = default;
-
-    /** Equality. */
-    bool operator == (Hash const & other) const {
-        return first == other.first and second == other.second;
+    bool operator == (Hash<BYTES> const & other) const {
+        for (unsigned i = 0; i < BYTES; ++i)
+            if (data_[i] != other.data_[i])
+                return false;
+        return true;
     }
 
-    /** Inequality. */
-    bool operator != (Hash const & other) const {
-        return first != other.first or second != other.second;
+    bool operator != (Hash<BYTES> const & other) const {
+        for (unsigned i = 0; i < BYTES; ++i)
+            if (data_[i] != other.data_[i])
+                return true;
+        return false;
     }
 
-    /** Outputs the hash to a string in hex format.
-     */
-    friend std::ostream & operator << (std::ostream & s, Hash const & h) {
+private:
+    friend class std::hash<::Hash<BYTES>>;
+
+    friend std::ostream & operator << (std::ostream & s, Hash<BYTES> const &h) {
         static const char dec2hex[16+1] = "0123456789abcdef";
-        unsigned char const * x = reinterpret_cast<unsigned char const *>(&h);
-        for (int i = 0; i < 16; ++i) {
-            s << dec2hex[(x[i] >> 4) & 15];
-            s << dec2hex[(x[i]) & 15];
+        for (int i = 0; i < BYTES / 2; ++i) {
+            s << dec2hex[(h.data_[i] >> 4) & 15];
+            s << dec2hex[(h.data_[i]) & 15];
         }
         return s;
     }
+
+    unsigned char data_[BYTES];
 };
 
 namespace std {
     /** So that Hash can be key in std containers.
      */
-    template<>
-    struct hash<::Hash> {
+    template<unsigned BYTES>
+    struct hash<::Hash<BYTES>> {
 
-        std::size_t operator()(::Hash const & h) const {
-            return std::hash<uint64_t>{}(h.first) + std::hash<uint64_t>{}(h.second);
+        std::size_t operator()(::Hash<BYTES> const & h) const {
+            std::size_t result = 0;
+            unsigned i = 0;
+            for (; i < BYTES - 8; i += 8)
+                result += std::hash<uint64_t>()(* reinterpret_cast<uint64_t const*>(h.data_[i]));
+            for (; i < BYTES; ++i)
+                result += std::hash<char>()(h.data_[i]);
+            return result;
         }
-
-};
+    };
 }
+
+
+typedef Hash<16> MD5;
+typedef Hash<20> SHA1;
+
+
