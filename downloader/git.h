@@ -115,7 +115,7 @@ public:
 
     static void Checkout(std::string const &repo_, std::string const & commit);
 
-    static std::vector<Commit> GetCommits(std::string const & repoPath);
+    static std::vector<Commit> GetCommits(std::string const & repoPath, std::string const & branch);
 
     static std::vector<std::string> GetChanges(std::string const & repoPath, std::string const & commit);
 

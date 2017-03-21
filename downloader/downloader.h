@@ -224,7 +224,7 @@ private:
       ! but how to store them?
       */
 
-    void analyzeCommit(PatternList const & filter, Commit const & c, std::ostream & fSnapshots);
+    void analyzeCommit(PatternList const & filter, Commit const & c, std::string const & parent, std::ostream & fSnapshots);
 
 
     long id_;
@@ -440,6 +440,8 @@ public:
 
     static ProgressReporter::Feeder GetReporterFeeder();
 
+
+    static long AssignContentId(SHA1 const & hash, std::string const & relPath, std::string const & root);
 
     static long AssignContentsId(std::string const & contets);
 

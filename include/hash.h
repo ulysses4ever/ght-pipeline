@@ -14,6 +14,8 @@ struct Hash {
     Hash() = default;
 
     Hash(std::string const & hex) {
+        for (unsigned i = 0; i < BYTES / 2; ++i)
+            data_[i] = FromHex(hex[i * 2]) * 16 + FromHex(hex[i * 2 + 1]);
     }
 
     bool operator == (Hash<BYTES> const & other) const {
@@ -43,6 +45,10 @@ private:
     }
 
     unsigned char data_[BYTES];
+
+    static unsigned char FromHex(char what) {
+        return (what >= 'a') ? (what - 'a') + 10 : what - '0';
+    }
 };
 
 namespace std {
@@ -55,7 +61,7 @@ namespace std {
             std::size_t result = 0;
             unsigned i = 0;
             for (; i < BYTES - 8; i += 8)
-                result += std::hash<uint64_t>()(* reinterpret_cast<uint64_t const*>(h.data_[i]));
+                result += std::hash<uint64_t>()(* reinterpret_cast<uint64_t const*>(h.data_+i));
             for (; i < BYTES; ++i)
                 result += std::hash<char>()(h.data_[i]);
             return result;
@@ -66,5 +72,3 @@ namespace std {
 
 typedef Hash<16> MD5;
 typedef Hash<20> SHA1;
-
-

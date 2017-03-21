@@ -25,7 +25,7 @@ std::unordered_set<std::string> Git::GetBranches(std::string const & repoPath) {
         while (branches[i] == ' ')
             ++i;
         // now everything till ' ' or '\n' is branch name
-        std::size_t start = i + 7;
+        std::size_t start = i;
         while (branches[i] != ' ' and branches[i] != '\n')
             ++i;
         if (branches[i] == '\n') {
@@ -139,8 +139,8 @@ void Git::Checkout(std::string const &repoPath, std::string const & commit) {
 }
 
 
-std::vector<Git::Commit> Git::GetCommits(std::string const & repoPath) {
-    std::string cmd = "git log --format=\"%H %at\"";
+std::vector<Git::Commit> Git::GetCommits(std::string const & repoPath, std::string const & branch) {
+    std::string cmd = STR("git log --format=\"%H %at\" \"" << branch << "\"");
     std::string result;
     if (not execAndCapture(cmd, repoPath, result))
         throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
@@ -190,14 +190,17 @@ std::vector<Git::Object> Git::GetObjects(std::string const & repoPath, std::stri
             while (result[++i] != ' ') {} // permissions
             std::size_t startt = i;
             while (result[++i] != ' ') {} // type
+            ++i;
             std::string hash = result.substr(i, 40); // hash
+            i += 41;
             std::size_t startp = i;
-            while (result[++i] != ' ') {} // relPath
+            while (result[++i] != '\n') {} // relPath
             std::string relPath = result.substr(startp, i - startp);
             objects.push_back(Object(std::move(hash), std::move(relPath), Object::Type::Added));
+            ++i; // end of line
         }
     } else {
-        std::string cmd = STR("git diff-tree --no-renames " << parent << " " << commit);
+        std::string cmd = STR("git diff-tree -r --no-renames " << parent << " " << commit);
         if (not execAndCapture(cmd, repoPath, result))
             throw std::ios_base::failure(STR("Command " << cmd << " failed in " << repoPath << " with message: " << result));
         std::size_t i = 0;
@@ -206,9 +209,9 @@ std::vector<Git::Object> Git::GetObjects(std::string const & repoPath, std::stri
             std::string hash = result.substr(i, 40);
             i += 41; // second hash
             char c = result[i++];
-            while (result[i] != ' ') // ski anything right after type
+            while (result[i] != ' ' and result[i] != '\t') // ski anything right after type
                 ++i;
-            while (result[i] == ' ') // skip any spaces before filename
+            while (result[i] == ' ' or result[i] == '\t') // skip any spaces before filename
                 ++i;
             std::size_t start = i;
             while (result[i] != '\n')

@@ -68,27 +68,58 @@ void Project::analyze(PatternList const & filter) {
     std::ofstream fSnapshots = CheckedOpen(fileSnapshots(), Settings::General::Incremental);
     // for all branches
     for (std::string const & b: Git::GetBranches(repoPath_)) {
-        // clear the last id's buffer and checkout the branch
+        // clear the last id's buffer
         lastIds_.clear();
-        Git::SetBranch(repoPath_, b);
-        // for all commits, in reverse
-        std::vector<Git::Commit> commits = Git::GetCommits(repoPath_);
+        // get all commits for the branch
+        std::vector<Git::Commit> commits = Git::GetCommits(repoPath_,b);
         Branch branch(b, commits.back().hash);
         // append the branch to list of branches if we haven't seen it yet
         if (branches_.insert(branch).second)
             fBranches << branch << std::endl;
+        std::string parent = "";
         for (auto i = commits.rbegin(), e = commits.rend(); i != e; ++i) {
             Commit c(*i);
             if (not commits_.insert(c).second)
                 continue;
             // we haven't seen the commit yet, store it and analyze
             fCommits << c << std::endl;
-            analyzeCommit(filter, *i, fSnapshots);
+            analyzeCommit(filter, *i, parent, fSnapshots);
+            parent = c.commit;
         }
     }
 }
 
+void Project::analyzeCommit(PatternList const & filter, Commit const & c, std::string const & parent, std::ostream & fSnapshots) {
+    bool checked = false;
+    for (auto obj : Git::GetObjects(repoPath_, c.commit, parent)) {
+        // check if it is a language file
+        if (not filter.check(obj.relPath, hasDeniedFiles_))
+            continue;
+        Snapshot s(snapshots_.size(), obj.relPath, c);
+        // set the parent id if we have one, keep -1 if not
+        auto i = lastIds_.find(s.relPath);
+        if (i != lastIds_.end())
+            s.parentId = i->second;
+        if (obj.type == Git::Object::Type::Deleted) {
+            s.contentId = -1;
+            lastIds_[s.relPath] = -1;
+        } else {
+            if (not checked) {
+                Git::Checkout(repoPath_, c.commit);
+                checked = true;
+            }
+            s.contentId = Downloader::AssignContentId(SHA1(obj.hash), obj.relPath, repoPath_);
+            lastIds_[s.relPath] = s.id;
+        }
+        snapshots_.push_back(s);
+        fSnapshots << s << std::endl;
+        ++Downloader::snapshots_;
+    }
+}
 
+
+
+/**
 void Project::analyzeCommit(PatternList const & filter, Commit const & c, std::ostream & fSnapshots) {
     Git::Checkout(repoPath_, c.commit);
     // list all files changed in the commit
@@ -116,7 +147,38 @@ void Project::analyzeCommit(PatternList const & filter, Commit const & c, std::o
         fSnapshots << s << std::endl;
         ++Downloader::snapshots_;
     }
-}
+} **/
+
+
+
+/**
+void Project::analyze(PatternList const & filter) {
+    // open the output streams
+    std::ofstream fBranches = CheckedOpen(fileBranches(), Settings::General::Incremental);
+    std::ofstream fCommits = CheckedOpen(fileCommits(), Settings::General::Incremental);
+    std::ofstream fSnapshots = CheckedOpen(fileSnapshots(), Settings::General::Incremental);
+    // for all branches
+    for (std::string const & b: Git::GetBranches(repoPath_)) {
+        // clear the last id's buffer and checkout the branch
+        lastIds_.clear();
+        Git::SetBranch(repoPath_, b);
+        // for all commits, in reverse
+        std::vector<Git::Commit> commits = Git::GetCommits(repoPath_);
+        Branch branch(b, commits.back().hash);
+        // append the branch to list of branches if we haven't seen it yet
+        if (branches_.insert(branch).second)
+            fBranches << branch << std::endl;
+        for (auto i = commits.rbegin(), e = commits.rend(); i != e; ++i) {
+            Commit c(*i);
+            if (not commits_.insert(c).second)
+                continue;
+            // we haven't seen the commit yet, store it and analyze
+            fCommits << c << std::endl;
+            analyzeCommit(filter, *i, fSnapshots);
+        }
+    }
+} **/
+
 
 Project::Project(std::string const & relativeUrl):
     id_(idCounter_++),
@@ -497,6 +559,49 @@ ProgressReporter::Feeder Downloader::GetReporterFeeder() {
         s << "active compressors " << compressors_ << std::endl;
     };
 }
+
+long Downloader::AssignContentId(SHA1 const & hash, std::string const & relPath, std::string const & root) {
+    long id;
+    {
+        std::lock_guard<std::mutex> g(contentGuard_);
+        auto i = contentHashes_.find(hash);
+        if (i != contentHashes_.end())
+            return i->second;
+        id = contentHashes_.size();
+        contentHashes_.insert(std::make_pair(hash, id));
+    }
+    std::string contents = LoadEntireFile(STR(root << "/" << relPath));
+    bytes_ += contents.size();
+    // we have a new hash now, the file contents must be stored and the contents hash file appended
+    std::string targetDir = STR(Settings::General::Target << "/files" << IdToPath(id, "files_"));
+    createPathIfMissing(targetDir);
+    {
+        std::ofstream f = CheckedOpen(STR(targetDir << "/" << id << ".raw"));
+        f << contents;
+    }
+    // output the mapping
+    {
+        std::lock_guard<std::mutex> g(contentFileGuard_);
+        contentHashesFile_ << hash << "," << id << std::endl;
+    }
+    // compress the folder if it is full
+    if (Settings::Downloader::CompressFileContents and IdPathFull(id)) {
+        if (Settings::Downloader::CompressInExtraThread and compressors_ < Settings::Downloader::MaxCompressorThreads) {
+            std::thread t([targetDir] () {
+                CompressFiles(targetDir);
+            });
+            t.detach();
+        } else {
+            CompressFiles(targetDir);
+        }
+    }
+    return id;
+}
+
+
+
+
+
 
 long Downloader::AssignContentsId(std::string const & contents) {
     bytes_ += contents.size();

@@ -14,8 +14,8 @@
 
 
 
-//std::string Settings::General::Target = "/home/peta/ele2";
-std::string Settings::General::Target = "/data/ele/download";
+std::string Settings::General::Target = "/home/peta/ele2";
+//std::string Settings::General::Target = "/data/ele/download";
 bool Settings::General::Incremental = false;
 unsigned Settings::General::NumThreads = 1;
 long Settings::General::DebugLimit = -1;
@@ -102,8 +102,8 @@ int main(int argc, char * argv[]) {
 
 
         // Clean();
-        // Download();
-        DownloadStackOverflow();
+        Download();
+        //DownloadStackOverflow();
 
 
 
