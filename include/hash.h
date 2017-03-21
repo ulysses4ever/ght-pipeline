@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <ostream>
+#include <cassert>
 
 
 
@@ -14,7 +15,8 @@ struct Hash {
     Hash() = default;
 
     Hash(std::string const & hex) {
-        for (unsigned i = 0; i < BYTES / 2; ++i)
+        assert(hex.size() == BYTES * 2);
+        for (unsigned i = 0; i < BYTES; ++i)
             data_[i] = FromHex(hex[i * 2]) * 16 + FromHex(hex[i * 2 + 1]);
     }
 
@@ -37,7 +39,7 @@ private:
 
     friend std::ostream & operator << (std::ostream & s, Hash<BYTES> const &h) {
         static const char dec2hex[16+1] = "0123456789abcdef";
-        for (int i = 0; i < BYTES / 2; ++i) {
+        for (int i = 0; i < BYTES; ++i) {
             s << dec2hex[(h.data_[i] >> 4) & 15];
             s << dec2hex[(h.data_[i]) & 15];
         }
