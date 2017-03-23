@@ -39,17 +39,32 @@ public:
             if (start + 1 == end) {
                 Merge(STR(start), STR(end), target);
             } else {
-                int middle = end - start / 2 + start;
+                int middle = (end - start) / 2 + start;
                 std::string first = Merge(start, middle);
                 std::string second = Merge(middle + 1, end);
                 Merge(first, second, target);
+                if (middle != start)
+                    DeleteResults(first);
+                if (middle != end)
+                    DeleteResults(second);
             }
+            return target;
         }
     }
 
-
-
 private:
+
+    static void DeleteResults(std::string const & suffix) {
+        std::cout << "Deleting intermediate results for suffix " << suffix << std::endl;
+        deletePath(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/files_extra" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/stats_" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/tokenized_files_" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/tokens_text" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/tokens_" << suffix << ".txt"));
+    }
 
     void append(std::string const & s1, std::string const & s2, std::string const & t) {
         long l1 = 0;
@@ -330,7 +345,7 @@ private:
                 }
                 ++i1;
                 ++l1;
-            } else if (index2 > index1) {
+            } else if (index2 < index1) {
                 std::string const & h = (*i2)[3];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
