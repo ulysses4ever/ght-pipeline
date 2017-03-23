@@ -10,6 +10,7 @@
 #include "cleaner/cleaner.h"
 #include "cleaner/alllang.h"
 #include "downloader/downloader.h"
+#include "stridemerger/stridemerger.h"
 
 #include "sovf_downloader/sovf_downloader.h"
 
@@ -68,7 +69,7 @@ int Settings::Downloader::MaxCompressorThreads = 4;
 bool Settings::Downloader::KeepRepos = false;
 
 
-std::string Settings::StrideMerger::Folder = "hh";
+std::string Settings::StrideMerger::Folder = "/data/delete";
 
 void Clean() {
     Cleaner::LoadPreviousRun();
@@ -113,9 +114,10 @@ int main(int argc, char * argv[]) {
 
 
         // Clean();
-        CleanAllLang();
+        //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
+        StrideMerger::Merge("0", "1", "0-1");
 
 
 
