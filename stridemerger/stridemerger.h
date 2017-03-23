@@ -364,7 +364,7 @@ private:
             long index1 = (i1 == e1) ? LONG_MAX : std::stol((*i1)[1]);
             long index2 = (i2 == e2) ? LONG_MAX : std::stol((*i2)[1]);
             if (index1 < index2) {
-                std::string const & h = (*i1)[3];
+                std::string const & h = (*i1)[4];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
                     writeTokenizedFile(o, *i1);
@@ -372,7 +372,7 @@ private:
                 ++i1;
                 ++l1;
             } else if (index2 < index1) {
-                std::string const & h = (*i2)[3];
+                std::string const & h = (*i2)[4];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
                     translateTokenizedFile(*i2);
