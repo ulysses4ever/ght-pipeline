@@ -23,12 +23,28 @@ public:
 
     static void Merge(std::string const & s1, std::string const &s2, std::string const & t) {
         StrideMerger m;
-        m.mergeProjects(s1, s2, t);
-        m.mergeFiles(s1, s2, t);
-        m.mergeStats(s1, s2, t);
+        //m.mergeProjects(s1, s2, t);
+        //m.mergeFiles(s1, s2, t);
+        //m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
         m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);
+    }
+
+    static std::string Merge(int start, int end) {
+        if (start == end) {
+            return STR(start); // and we are done
+        } else {
+            std::string target = STR(start << "-" << end);
+            if (start + 1 == end) {
+                Merge(STR(start), STR(end), target);
+            } else {
+                int middle = end - start / 2 + start;
+                std::string first = Merge(start, middle);
+                std::string second = Merge(middle + 1, end);
+                Merge(first, second, target);
+            }
+        }
     }
 
 
@@ -315,7 +331,7 @@ private:
                 ++i1;
                 ++l1;
             } else if (index2 > index1) {
-                std::string const & h = (*i1)[3];
+                std::string const & h = (*i2)[3];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
                     translateTokenizedFile(*i2);
@@ -324,6 +340,8 @@ private:
                 ++i2;
                 ++l2;
             } else {
+                std::cout << index1 << std::endl;
+                std::cout << index2 << std::endl;
                 assert(false and "This is not possible");
             }
         }
