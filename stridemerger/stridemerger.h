@@ -263,9 +263,9 @@ private:
                     translation_.insert(std::make_pair(id, i->second));
                     id = i->second;
                 }
-                ++l1;
+                ++l2;
             }
-            std::cout << ", " << l1 << " records" << std::endl;
+            std::cout << ", " << l2 << " records" << std::endl;
         }
         std::cout << " total " << total << " records after merge" << std::endl;
     }
