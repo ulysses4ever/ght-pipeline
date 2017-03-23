@@ -22,6 +22,10 @@ class StrideMerger {
 public:
 
     static void Merge(std::string const & s1, std::string const &s2, std::string const & t) {
+        if (ResultsReady(t)) {
+            std::cout << "Results for " << t << " already exist and will not be recomputed." << std::endl;
+            return;
+        }
         StrideMerger m;
         //m.mergeProjects(s1, s2, t);
         //m.mergeFiles(s1, s2, t);
@@ -53,6 +57,26 @@ public:
     }
 
 private:
+    static bool ResultsReady(std::string const & suffix) {
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/files_extra" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/stats_" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokenized_files_" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokens_text_" << suffix << ".txt")))
+            return false;
+        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokens_" << suffix << ".txt")))
+            return false;
+        return true;
+    }
+
 
     static void DeleteResults(std::string const & suffix) {
         std::cout << "Deleting intermediate results for suffix " << suffix << std::endl;
@@ -316,6 +340,8 @@ private:
             j += 6; // @@::@@
             long count = std::atol(row[i].c_str() + i);
             row[i] = STR(std::hex << translation_[id] << "@@::@@" << std::dec << count);
+            if (++i == row.size())
+                break;
         }
     }
 
