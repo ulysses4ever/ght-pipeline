@@ -42,7 +42,11 @@ public:
             parseRow();
         }
 
-        std::vector<std::string> const & operator *() {
+        std::vector<std::string> const & operator *() const {
+            return row_;
+        }
+
+        std::vector<std::string> & operator *() {
             return row_;
         }
 

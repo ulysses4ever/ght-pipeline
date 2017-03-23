@@ -27,7 +27,7 @@ file(GLOB_RECURSE DOWNLOADER_SRC "downloader/*.h" "downloader/*.cpp" "include/*.
 #add_executable(downloader ${DOWNLOADER_SRC})
 #target_link_libraries(downloader ${CMAKE_THREAD_LIBS_INIT})
 
-file(GLOB_RECURSE GHT_SRC "ght/*.h" "ght/*.cpp" "include/*.h" "include/*.cpp" "hashes/*.cpp" "hashes/*.h" "cleaner/*.h" "cleaner/*.cpp" "downloader/*.h" "downloader/*.cpp" "sovf_downloader/*.h" "sovf_downloader/*.cpp")
+file(GLOB_RECURSE GHT_SRC "ght/*.h" "ght/*.cpp" "include/*.h" "include/*.cpp" "hashes/*.cpp" "hashes/*.h" "cleaner/*.h" "cleaner/*.cpp" "downloader/*.h" "downloader/*.cpp" "sovf_downloader/*.h" "sovf_downloader/*.cpp" "stridemerger/*.h" "stridemerger/*.cpp")
 
 add_executable(ght ${GHT_SRC})
 target_link_libraries(ght ${CMAKE_THREAD_LIBS_INIT})

@@ -8,6 +8,7 @@
 
 
 #include "cleaner/cleaner.h"
+#include "cleaner/alllang.h"
 #include "downloader/downloader.h"
 
 #include "sovf_downloader/sovf_downloader.h"
@@ -51,6 +52,8 @@ std::vector<std::string> Settings::Cleaner::AllowedLanguages = {"JavaScript"};
 bool Settings::Cleaner::AllowForks = false;
 
 
+std::string Settings::CleanerAllLang::OutputFile = "/home/peta/delete/cleaned_projects.csv";
+
 
 std::vector<std::string> Settings::Downloader::AllowPrefix = {};
 std::vector<std::string> Settings::Downloader::AllowSuffix = {".js"};
@@ -65,7 +68,7 @@ int Settings::Downloader::MaxCompressorThreads = 4;
 bool Settings::Downloader::KeepRepos = false;
 
 
-
+std::string Settings::StrideMerger::Folder = "hh";
 
 void Clean() {
     Cleaner::LoadPreviousRun();
@@ -75,6 +78,14 @@ void Clean() {
     Cleaner::FeedFrom(Settings::Cleaner::InputFiles);
     Cleaner::Wait();
     Cleaner::Finalize();
+}
+
+void CleanAllLang() {
+    CleanerAllLang::Spawn(1);
+    ProgressReporter::Start(CleanerAllLang::GetReporterFeeder());
+    CleanerAllLang::Run();
+    CleanerAllLang::FeedFrom(Settings::Cleaner::InputFiles);
+    CleanerAllLang::Wait();
 }
 
 void Download() {
@@ -102,7 +113,8 @@ int main(int argc, char * argv[]) {
 
 
         // Clean();
-        Download();
+        CleanAllLang();
+        //Download();
         //DownloadStackOverflow();
 
 

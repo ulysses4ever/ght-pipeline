@@ -40,6 +40,11 @@ public:
         static bool AllowForks;
     };
 
+    class CleanerAllLang {
+    public:
+        static std::string OutputFile;
+    };
+
     class Downloader {
     public:
         static std::vector<std::string> AllowPrefix;
@@ -54,6 +59,11 @@ public:
         static int MaxCompressorThreads;
         static bool KeepRepos;
 
+    };
+
+    class StrideMerger {
+    public:
+        static std::string Folder;
     };
 
 
