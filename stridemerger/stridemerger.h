@@ -27,9 +27,9 @@ public:
             return;
         }
         StrideMerger m;
-        //m.mergeProjects(s1, s2, t);
-        //m.mergeFiles(s1, s2, t);
-        //m.mergeStats(s1, s2, t);
+        m.mergeProjects(s1, s2, t);
+        m.mergeFiles(s1, s2, t);
+        m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
         m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);

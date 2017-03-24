@@ -69,7 +69,7 @@ int Settings::Downloader::MaxCompressorThreads = 4;
 bool Settings::Downloader::KeepRepos = false;
 
 
-std::string Settings::StrideMerger::Folder = "/data/delete";
+std::string Settings::StrideMerger::Folder = "/data/ecoop17/datasets/js_github_all";
 
 void Clean() {
     Cleaner::LoadPreviousRun();
@@ -117,7 +117,8 @@ int main(int argc, char * argv[]) {
         //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
-        StrideMerger::Merge("0", "1", "0-1");
+        StrideMerger::Merge(0, 19);
+        //StrideMerger::Merge("0", "1", "0-1");
 
 
 
