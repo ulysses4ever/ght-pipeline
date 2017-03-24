@@ -234,6 +234,10 @@ private:
                 // this is just defensive programming, we assume the ids to be consecutive
                 if (id > nextId)
                     nextId = id;
+                if (tokens.find(row[2]) != tokens.end()) {
+                    std::cout << "HOUSTON WE HAVE A PROBLEM" << std::endl;
+                    std::cout << tokens[row[2]] << "--" << id << std::endl;
+                }
                 tokens.insert(std::make_pair(row[2], id));
                 o << row[0] << ","
                   << row[1] << ","
