@@ -117,8 +117,8 @@ int main(int argc, char * argv[]) {
         //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
-        //StrideMerger::Merge(0, 19);
-        StrideMerger::Merge("0-1", "2", "0-2");
+        StrideMerger::Merge(0, 19);
+        //StrideMerger::Merge("0-1", "2", "0-2");
         // do the reporting
 
 

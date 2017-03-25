@@ -27,9 +27,9 @@ public:
             return;
         }
         StrideMerger m;
-        //m.mergeProjects(s1, s2, t);
-        //m.mergeFiles(s1, s2, t);
-        //m.mergeStats(s1, s2, t);
+        m.mergeProjects(s1, s2, t);
+        m.mergeFiles(s1, s2, t);
+        m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
         m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);
@@ -44,13 +44,13 @@ public:
         } else {
             std::string target = STR(start << "-" << end);
             if (start + 1 == end) {
-                //Merge(STR(start), STR(end), target);
+                Merge(STR(start), STR(end), target);
             } else {
                 int middle = (end - start) / 2 + start;
                 std::string first = Merge(start, middle);
                 std::string second = Merge(middle + 1, end);
                 std::cout << "--- resuming merge from " << start << " to " << end << std::endl;
-                //Merge(first, second, target);
+                Merge(first, second, target);
                 if (middle != start)
                     DeleteResults(first);
                 if (middle != end)
@@ -68,7 +68,6 @@ private:
 
     static void DeleteResults(std::string const & suffix) {
         std::cout << "--- deleting intermediate results for suffix " << suffix << std::endl;
-        return;
         deletePath(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt"));
