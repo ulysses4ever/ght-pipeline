@@ -70,7 +70,7 @@ bool Settings::Downloader::KeepRepos = false;
 
 
 std::string Settings::StrideMerger::Folder = "/data/ecoop17/datasets/js_github_all";
-
+//std::string Settings::StrideMerger::Folder = "/home/peta/delete/strides";
 void Clean() {
     Cleaner::LoadPreviousRun();
     Cleaner::Spawn(1);
@@ -117,11 +117,8 @@ int main(int argc, char * argv[]) {
         //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
-        StrideMerger::Merge(0, 19);
-        //StrideMerger::Merge("0", "1", "0-1");
-
-
-
+        //StrideMerger::Merge(0, 19);
+        StrideMerger::Merge("0-1", "2", "0-2");
         // do the reporting
 
 

@@ -23,30 +23,34 @@ public:
 
     static void Merge(std::string const & s1, std::string const &s2, std::string const & t) {
         if (ResultsReady(t)) {
-            std::cout << "Results for " << t << " already exist and will not be recomputed." << std::endl;
+            std::cout << "  Results for " << t << " already exist and will not be recomputed." << std::endl;
             return;
         }
         StrideMerger m;
-        m.mergeProjects(s1, s2, t);
-        m.mergeFiles(s1, s2, t);
-        m.mergeStats(s1, s2, t);
+        //m.mergeProjects(s1, s2, t);
+        //m.mergeFiles(s1, s2, t);
+        //m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
         m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);
+        std::ofstream f = CheckedOpen(STR(Settings::StrideMerger::Folder << "/done_" << t << ".txt"));
+        f << "done.";
     }
 
     static std::string Merge(int start, int end) {
+        std::cout << "--- merge from " << start << " to " << end << std::endl;
         if (start == end) {
             return STR(start); // and we are done
         } else {
             std::string target = STR(start << "-" << end);
             if (start + 1 == end) {
-                Merge(STR(start), STR(end), target);
+                //Merge(STR(start), STR(end), target);
             } else {
                 int middle = (end - start) / 2 + start;
                 std::string first = Merge(start, middle);
                 std::string second = Merge(middle + 1, end);
-                Merge(first, second, target);
+                std::cout << "--- resuming merge from " << start << " to " << end << std::endl;
+                //Merge(first, second, target);
                 if (middle != start)
                     DeleteResults(first);
                 if (middle != end)
@@ -58,28 +62,13 @@ public:
 
 private:
     static bool ResultsReady(std::string const & suffix) {
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/files_extra" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/stats_" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokenized_files_" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokens_text_" << suffix << ".txt")))
-            return false;
-        if (not isFile(STR(Settings::StrideMerger::Folder << "/tokens_" << suffix << ".txt")))
-            return false;
-        return true;
+        return isFile(STR(Settings::StrideMerger::Folder << "/done_" << suffix << ".txt"));
     }
 
 
     static void DeleteResults(std::string const & suffix) {
-        std::cout << "Deleting intermediate results for suffix " << suffix << std::endl;
+        std::cout << "--- deleting intermediate results for suffix " << suffix << std::endl;
+        return;
         deletePath(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt"));
@@ -338,7 +327,7 @@ private:
             while (row[i][j] != '@')
                 id = id * 16 + hexChar(row[i][j++]);
             j += 6; // @@::@@
-            long count = std::atol(row[i].c_str() + i);
+            long count = std::atol(row[i].c_str() + j);
             row[i] = STR(std::hex << translation_[id] << "@@::@@" << std::dec << count);
             if (++i == row.size())
                 break;
