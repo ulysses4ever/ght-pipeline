@@ -27,11 +27,11 @@ public:
             return;
         }
         StrideMerger m;
-        //m.mergeProjects(s1, s2, t);
-        //m.mergeFiles(s1, s2, t);
-        //m.mergeStats(s1, s2, t);
+        m.mergeProjects(s1, s2, t);
+        m.mergeFiles(s1, s2, t);
+        m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
-        //m.mergeTokensCount(s1, s2, t);
+        m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);
         std::ofstream f = CheckedOpen(STR(Settings::StrideMerger::Folder << "/done_" << t << ".txt"));
         f << "done.";
@@ -53,7 +53,7 @@ public:
                 Merge(first, second, target);
                 if (middle != start)
                     DeleteResults(first);
-                if (middle != end)
+                if (middle + 1 != end)
                     DeleteResults(second);
             }
             return target;
@@ -69,12 +69,12 @@ private:
     static void DeleteResults(std::string const & suffix) {
         std::cout << "--- deleting intermediate results for suffix " << suffix << std::endl;
         deletePath(STR(Settings::StrideMerger::Folder << "/projects_" << suffix << ".txt"));
-        deletePath(STR(Settings::StrideMerger::Folder << "/projects_extra" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/projects_extra_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/files_" << suffix << ".txt"));
-        deletePath(STR(Settings::StrideMerger::Folder << "/files_extra" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/files_extra_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/stats_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/tokenized_files_" << suffix << ".txt"));
-        deletePath(STR(Settings::StrideMerger::Folder << "/tokens_text" << suffix << ".txt"));
+        deletePath(STR(Settings::StrideMerger::Folder << "/tokens_text_" << suffix << ".txt"));
         deletePath(STR(Settings::StrideMerger::Folder << "/tokens_" << suffix << ".txt"));
     }
 
@@ -100,7 +100,7 @@ private:
                 o << line << std::endl;
                 ++l2;
             }
-            std::cout << ", " << l1 << " records" << std::endl;
+            std::cout << ", " << l2 << " records" << std::endl;
         }
         std::cout << "  " << (l1 + l2) << " records total" << std::endl;
     }
@@ -355,8 +355,6 @@ private:
             long index1 = (i1 == e1) ? LONG_MAX : std::stol((*i1)[1]);
             long index2 = (i2 == e2) ? LONG_MAX : std::stol((*i2)[1]);
             if (index1 < index2) {
-                if (index1 == 260116661)
-                    std::cout << "here" << std::endl;
                 std::string const & h = (*i1)[4];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
@@ -369,8 +367,6 @@ private:
                     (*i1)[5] = (*i1)[5].substr(3);
             } else if (index2 < index1) {
                 std::string const & h = (*i2)[4];
-                if (index2 == 260116661)
-                    std::cout << "here" << std::endl;
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
                     translateTokenizedFile(*i2);

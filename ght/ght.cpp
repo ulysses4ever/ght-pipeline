@@ -70,7 +70,7 @@ bool Settings::Downloader::KeepRepos = false;
 
 
 //std::string Settings::StrideMerger::Folder = "/data/ecoop17/datasets/js_github_all";
-std::string Settings::StrideMerger::Folder = "/home/peta/gh_all";
+std::string Settings::StrideMerger::Folder = "/home/peta/strides";
 void Clean() {
     Cleaner::LoadPreviousRun();
     Cleaner::Spawn(1);
