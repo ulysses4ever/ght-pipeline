@@ -27,11 +27,11 @@ public:
             return;
         }
         StrideMerger m;
-        m.mergeProjects(s1, s2, t);
-        m.mergeFiles(s1, s2, t);
-        m.mergeStats(s1, s2, t);
+        //m.mergeProjects(s1, s2, t);
+        //m.mergeFiles(s1, s2, t);
+        //m.mergeStats(s1, s2, t);
         m.mergeTokensText(s1, s2, t);
-        m.mergeTokensCount(s1, s2, t);
+        //m.mergeTokensCount(s1, s2, t);
         m.mergeTokenizedFiles(s1, s2, t);
         std::ofstream f = CheckedOpen(STR(Settings::StrideMerger::Folder << "/done_" << t << ".txt"));
         f << "done.";
@@ -303,7 +303,7 @@ private:
           << row[1] << ","
           << row[2] << ","
           << row[3] << ","
-          << row[4] << ", @#@";
+          << row[4] << ",@#@";
         unsigned i = 5;
         while (true) {
             s << row[i];
@@ -346,12 +346,17 @@ private:
         std::cout << "  " << s2 << std::endl;
         CSVParser p1(s1);
         CSVParser p2(s2);
-        auto i1 = p1.begin(), e1 = p2.end();
+        auto i1 = p1.begin(), e1 = p1.end();
         auto i2 = p2.begin(), e2 = p2.end();
+        // get rid of #@#
+        (*i1)[5] = (*i1)[5].substr(3);
+        (*i2)[5] = (*i2)[5].substr(3);
         while (i1 != e1 and i2 != e2) {
             long index1 = (i1 == e1) ? LONG_MAX : std::stol((*i1)[1]);
             long index2 = (i2 == e2) ? LONG_MAX : std::stol((*i2)[1]);
             if (index1 < index2) {
+                if (index1 == 260116661)
+                    std::cout << "here" << std::endl;
                 std::string const & h = (*i1)[4];
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
@@ -359,8 +364,13 @@ private:
                 }
                 ++i1;
                 ++l1;
+                // get rid of #@#
+                if (i1 != e1)
+                    (*i1)[5] = (*i1)[5].substr(3);
             } else if (index2 < index1) {
                 std::string const & h = (*i2)[4];
+                if (index2 == 260116661)
+                    std::cout << "here" << std::endl;
                 if (tokenHashes.find(h) == tokenHashes.end()) {
                     tokenHashes.insert(h);
                     translateTokenizedFile(*i2);
@@ -368,6 +378,9 @@ private:
                 }
                 ++i2;
                 ++l2;
+                // get rid of #@#
+                if (i2 != e2)
+                    (*i2)[5] = (*i2)[5].substr(3);
             } else {
                 std::cout << index1 << std::endl;
                 std::cout << index2 << std::endl;
