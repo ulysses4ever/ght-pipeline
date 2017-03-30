@@ -10,10 +10,12 @@
 #include "cleaner/cleaner.h"
 #include "cleaner/alllang.h"
 #include "downloader/downloader.h"
-#include "stridemerger/stridemerger.h"
 
 #include "sovf_downloader/sovf_downloader.h"
 
+
+#include "stridemerger/stridemerger.h"
+#include "sccsorter/sccsorter.h"
 
 
 std::string Settings::General::Target = "/home/peta/ele2";
@@ -112,12 +114,17 @@ int main(int argc, char * argv[]) {
     try {
         std::cout << "OH HAI!" << std::endl;
 
+        if (argc != 2)
+            throw std::runtime_error("Expected tokenized file to sort!");
+        SccSorter::Verify(argv[1]);
+
 
         // Clean();
         //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
-        StrideMerger::Merge(0, 19);
+        //StrideMerger::Merge(0, 19);
+        //SccSorter::Verify("/home/peta/delete/tokenized_files_0.txt");
         //StrideMerger::Merge("0-1", "2", "0-2");
         // do the reporting
 
