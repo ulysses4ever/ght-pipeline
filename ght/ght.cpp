@@ -114,16 +114,18 @@ int main(int argc, char * argv[]) {
     try {
         std::cout << "OH HAI!" << std::endl;
 
-        if (argc != 2)
+        if (argc != 4)
             throw std::runtime_error("Expected tokenized file to sort!");
-        SccSorter::Verify(argv[1]);
+        int start = std::atoi(argv[1]);
+        int end = std::atoi(argv[2]);
+        Settings::StrideMerger::Folder = argv[3];
+        StrideMerger::Merge(start, end);
 
 
         // Clean();
         //CleanAllLang();
         //Download();
         //DownloadStackOverflow();
-        //StrideMerger::Merge(0, 19);
         //SccSorter::Verify("/home/peta/delete/tokenized_files_0.txt");
         //StrideMerger::Merge("0-1", "2", "0-2");
         // do the reporting
