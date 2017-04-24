@@ -231,6 +231,8 @@ private:
     std::string url_;
     bool hasDeniedFiles_;
 
+    bool shouldSkip_;
+
 
     std::string path_;
     std::string repoPath_;
@@ -262,173 +264,14 @@ private:
 //} // namespace xx
 
 
-#ifdef HAHA
-
-class Project {
-public:
-    class File {
-    public:
-        struct Hash {
-            std::size_t operator()(File const & f) const;
-        };
-
-        bool operator == (File const & other) const {
-            return commit_ == other.commit_ and relPath_ == other.relPath_;
-        }
-
-        bool isNew() const {
-            return isNew_;
-        }
-
-        long id() const {
-            return id_;
-        }
-
-        File(Git::FileHistory const & h, long lastId);
-
-        /** Creates new file from a csv row.
-        */
-        File(std::vector<std::string> const & row);
-
-    private:
-        friend class Project;
-        friend class Downloader;
-
-        long id_;
-        std::string relPath_;
-        std::string commit_;
-        int time_;
-        long contentId_;
-        long parentId_;
-
-        bool isNew_;
-
-        friend std::ostream & operator << (std::ostream & s, File const & f);
-
-    };
-
-    class Branch {
-    public:
-        struct Hash {
-            std::size_t operator()(Branch const & b) const;
-        };
-
-        bool operator == (Branch const & other) const {
-            return name_ == other.name_ and commit_ == other.commit_;
-        }
-
-        bool isNew() const {
-            return isNew_;
-        }
-
-        Branch(Git::BranchInfo const & branch);
-
-        Branch(std::vector<std::string> const & row);
-
-    private:
-        friend class Project;
-
-        std::string name_;
-        std::string commit_;
-        int time_;
-        std::vector<long> files_;
-
-        bool isNew_;
-
-        friend std::ostream & operator << (std::ostream & s, Branch const & f);
-    };
-
-    Project(std::string const & relativeUrl);
-    Project(std::string const & relativeUrl, long id);
-
-    long id() const {
-        return id_;
-    }
-
-    std::string gitUrl() const {
-        return STR("https://github.com/" << url_ << ".git");
-    }
-
-    std::string apiUrl() const {
-        return STR("https://api.github.com/repos/" << url_);
-    }
-
-    void initialize();
-
-    void loadPreviousRun();
-
-    /** Clones the project if it does not exist, or pulls if it does.
-
-      Returns true if the operation was successful, false if not.
-    */
-    void clone(bool force = false);
-
-    /** Loads the metadata from github.
-     */
-    void loadMetadata();
-
-    /** Deletes the repository from disk.
-     */
-    void deleteRepo();
-
-    /** Writes the file and branch statistics in the repository folder.
-
-      If append is true, only newly created files and branches will be appended to existing records, if false, all files and branches will be written, overwriting any existing data.
-     */
-    void writeStats(bool append = true);
-
-    void loadFileSnapshots(PatternList const & filter);
-
-
-
-
-private:
-    friend class Downloader;
-
-    friend std::ostream & operator << (std::ostream & s, Project const & p) {
-        s << p.id_ << ","
-          << escape(p.url_) << ","
-          << (p.hasDeniedFiles_ ? "1" : "0") << ","
-          << p.resumeTime_ << ","
-          << p.cloneTime_ << ","
-          << p.metadataTime_ << ","
-          << p.snapshotsTime_ << ","
-          << p.writebackTime_ << ","
-          << p.deleteTime_;
-        return s;
-    }
-
-    long id_;
-    std::string url_;
-
-    std::string path_;
-
-    std::string repoPath_;
-
-
-    std::unordered_set<File, File::Hash> files_;
-    std::unordered_set<Branch, Branch::Hash> branches_;
-
-    bool hasDeniedFiles_;
-
-    double resumeTime_;
-    double cloneTime_;
-    double metadataTime_;
-    double snapshotsTime_;
-    double writebackTime_;
-    double deleteTime_;
-
-    static std::atomic<long> idCounter_;
-
-};
-
-#endif
 
 class Downloader : public Worker<Downloader, Project> {
 public:
     static void Initialize();
 
     static void LoadPreviousRun();
+
+    static void OpenOutputFiles();
 
     /** Reads the given file, and schedules each project in it for the download.
 
@@ -502,8 +345,14 @@ private:
             currentProject_ = -1;
             currentJob_ = ' '; // idle
         } catch (...) {
+            currentJob_ = 'E';
             std::lock_guard<std::mutex> g(failedProjectsGuard_);
             failedProjectsFile_ << escape(p.gitUrl()) << "," << p.id_ << std::endl;
+            try {
+                p.deleteRepo();
+            } catch (...) {
+                // do nothing
+            }
             throw;
         }
     }
