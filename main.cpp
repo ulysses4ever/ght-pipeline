@@ -20,7 +20,7 @@
 
 std::string Settings::General::Target = "/data/ele/download";
 bool Settings::General::Incremental = true;
-unsigned Settings::General::NumThreads = 1;
+unsigned Settings::General::NumThreads = 8;
 long Settings::General::DebugLimit = -1;
 long Settings::General::DebugSkip = 0;
 std::vector<std::string> Settings::General::ApiTokens;
