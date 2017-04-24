@@ -215,12 +215,14 @@ void Downloader::FeedFrom(std::string const & filename) {
         if (x.size() == 1) {
             Project p(x[0]);
             if (not isFile(p.fileLog()))
-                Schedule(Project(x[0]));
+                Schedule(p);
             continue;
         } else if (x.size() == 2) {
             try {
                 char ** c;
-                Schedule(Project(x[0], std::strtol(x[1].c_str(), c, 10)));
+                Project p(x[0], std::strtol(x[1].c_str(), c, 10));
+                if (not isFile(p.fileLog()))
+                    Schedule(p);
                 continue;
             } catch (...) {
                 // the code below outputs the error too

@@ -164,6 +164,9 @@ public:
         return STR("https://api.github.com/repos/" << url_);
     }
 
+    long id() const {
+        return id_;
+    }
 
     void initialize();
 
